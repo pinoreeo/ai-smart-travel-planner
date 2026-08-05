@@ -6,13 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('trp_user_roles', function (Blueprint $table) {
-
+        Schema::create('trp_favorites', function (Blueprint $table) {
             $table->id();
 
             $table->foreignId('user_id')
@@ -20,28 +16,24 @@ return new class extends Migration
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
 
-            $table->foreignId('role_id')
-                ->constrained('trp_roles')
+            $table->foreignId('place_id')
+                ->constrained('trp_places')
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
 
             $table->timestamps();
 
             $table->unique(
-                ['user_id', 'role_id'],
-                'trp_user_roles_user_role_unique'
+                ['user_id', 'place_id'],
+                'trp_favorites_user_place_unique'
             );
 
-            $table->index('user_id');
-            $table->index('role_id');
+            $table->index('place_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('trp_user_roles');
+        Schema::dropIfExists('trp_favorites');
     }
 };

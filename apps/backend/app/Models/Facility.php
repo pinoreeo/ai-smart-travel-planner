@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Role extends Model
+class Facility extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $table = 'trp_roles';
+    protected $table = 'trp_facilities';
 
     protected $fillable = [
         'name',
         'slug',
+        'icon',
         'description',
         'is_active',
     ];
@@ -26,13 +28,15 @@ class Role extends Model
         ];
     }
 
-    public function users(): BelongsToMany
+    public function places(): BelongsToMany
     {
         return $this->belongsToMany(
-            User::class,
-            'trp_user_roles',
-            'role_id',
-            'user_id'
-        )->withTimestamps();
+            Place::class,
+            'trp_place_facilities',
+            'facility_id',
+            'place_id'
+        )
+            ->withPivot('notes')
+            ->withTimestamps();
     }
 }

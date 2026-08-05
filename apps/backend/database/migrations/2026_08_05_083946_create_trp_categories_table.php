@@ -6,32 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('trp_roles', function (Blueprint $table) {
+        Schema::create('trp_categories', function (Blueprint $table) {
             $table->id();
 
-            $table->string('name', 50);
-            $table->string('slug', 50)->unique();
+            $table->string('name', 100);
+            $table->string('slug', 120)->unique();
             $table->text('description')->nullable();
-
+            $table->string('icon', 100)->nullable();
             $table->boolean('is_active')->default(true);
 
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('name');
             $table->index('is_active');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('trp_roles');
+        Schema::dropIfExists('trp_categories');
     }
 };
