@@ -18,9 +18,6 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the roles that belong to the user.
-     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -31,13 +28,18 @@ class User extends Authenticatable
         )->withTimestamps();
     }
 
-    /**
-     * Check whether the user has a specific role.
-     */
     public function hasRole(string $role): bool
     {
         return $this->roles()
             ->where('slug', $role)
             ->exists();
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }

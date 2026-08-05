@@ -7,15 +7,10 @@ use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
         Role::updateOrCreate(
-            [
-                'slug' => 'admin',
-            ],
+            ['slug' => 'admin'],
             [
                 'name' => 'Administrator',
                 'description' => 'Administrator yang memiliki akses penuh ke sistem.',
@@ -24,9 +19,7 @@ class RoleSeeder extends Seeder
         );
 
         Role::updateOrCreate(
-            [
-                'slug' => 'user',
-            ],
+            ['slug' => 'user'],
             [
                 'name' => 'User',
                 'description' => 'Pengguna umum aplikasi AI Smart Travel Planner.',
