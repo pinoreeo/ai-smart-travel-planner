@@ -15,6 +15,7 @@ class PlaceOpeningHour extends Model
     protected $fillable = [
         'place_id',
         'day_of_week',
+        'sort_order',
         'open_time',
         'close_time',
         'is_closed',
@@ -24,6 +25,7 @@ class PlaceOpeningHour extends Model
     protected function casts(): array
     {
         return [
+            'sort_order' => 'integer',
             'open_time' => 'datetime:H:i',
             'close_time' => 'datetime:H:i',
             'is_closed' => 'boolean',

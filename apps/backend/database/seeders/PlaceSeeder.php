@@ -50,6 +50,7 @@ class PlaceSeeder extends Seeder
                     'musala',
                     'restoran',
                     'area-bermain-anak',
+                    'spot-foto',
                 ],
                 'opening_hours' => [
                     ['day_of_week' => 'monday', 'open_time' => '07:00', 'close_time' => '17:00'],
@@ -95,11 +96,12 @@ class PlaceSeeder extends Seeder
                     'created_by' => $admin->id,
                     'updated_by' => $admin->id,
                 ],
-                'categories' => ['alam'],
+                'categories' => ['alam', 'petualangan'],
                 'facilities' => [
                     'area-parkir',
                     'toilet',
                     'musala',
+                    'spot-foto',
                 ],
                 'opening_hours' => [
                     ['day_of_week' => 'monday', 'open_time' => '07:00', 'close_time' => '17:00'],
@@ -145,10 +147,11 @@ class PlaceSeeder extends Seeder
                     'created_by' => $admin->id,
                     'updated_by' => $admin->id,
                 ],
-                'categories' => ['sejarah', 'keluarga'],
+                'categories' => ['sejarah', 'budaya', 'keluarga'],
                 'facilities' => [
                     'area-parkir',
                     'toilet',
+                    'pemandu-wisata',
                 ],
                 'opening_hours' => [
                     ['day_of_week' => 'monday', 'open_time' => '08:00', 'close_time' => '15:00'],
@@ -212,6 +215,7 @@ class PlaceSeeder extends Seeder
                     'toilet',
                     'musala',
                     'restoran',
+                    'spot-foto',
                 ],
                 'opening_hours' => [
                     ['day_of_week' => 'monday', 'open_time' => '09:00', 'close_time' => '22:00'],
@@ -255,10 +259,19 @@ class PlaceSeeder extends Seeder
 
             $place->facilities()->sync($facilityIds);
 
+            $openingHourKeys = [];
+
             foreach ($placeData['opening_hours'] as $openingHour) {
+                $sortOrder = $openingHour['sort_order'] ?? 0;
+                $openingHourKeys[] = [
+                    'day_of_week' => $openingHour['day_of_week'],
+                    'sort_order' => $sortOrder,
+                ];
+
                 $place->openingHours()->updateOrCreate(
                     [
                         'day_of_week' => $openingHour['day_of_week'],
+                        'sort_order' => $sortOrder,
                     ],
                     [
                         'open_time' => $openingHour['open_time'],
@@ -268,6 +281,18 @@ class PlaceSeeder extends Seeder
                     ]
                 );
             }
+
+            $place->openingHours()
+                ->whereNot(function ($query) use ($openingHourKeys) {
+                    foreach ($openingHourKeys as $key) {
+                        $query->orWhere(function ($query) use ($key) {
+                            $query
+                                ->where('day_of_week', $key['day_of_week'])
+                                ->where('sort_order', $key['sort_order']);
+                        });
+                    }
+                })
+                ->delete();
 
             $place->images()->updateOrCreate(
                 [

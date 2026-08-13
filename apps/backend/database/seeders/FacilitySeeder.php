@@ -52,6 +52,20 @@ class FacilitySeeder extends Seeder
                 'description' => 'Tersedia fasilitas atau akses untuk pengunjung disabilitas.',
                 'is_active' => true,
             ],
+            [
+                'name' => 'Spot Foto',
+                'slug' => 'spot-foto',
+                'icon' => 'camera',
+                'description' => 'Tersedia area yang menarik untuk berfoto.',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Pemandu Wisata',
+                'slug' => 'pemandu-wisata',
+                'icon' => 'map',
+                'description' => 'Tersedia pemandu atau informasi wisata di lokasi.',
+                'is_active' => true,
+            ],
         ];
 
         foreach ($facilities as $facility) {

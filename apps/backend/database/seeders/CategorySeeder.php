@@ -45,6 +45,20 @@ class CategorySeeder extends Seeder
                 'icon' => 'users',
                 'is_active' => true,
             ],
+            [
+                'name' => 'Budaya',
+                'slug' => 'budaya',
+                'description' => 'Destinasi yang menonjolkan seni, tradisi, dan kehidupan lokal.',
+                'icon' => 'palette',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Petualangan',
+                'slug' => 'petualangan',
+                'description' => 'Aktivitas wisata yang cocok untuk eksplorasi aktif dan pengalaman outdoor.',
+                'icon' => 'mountain',
+                'is_active' => true,
+            ],
         ];
 
         foreach ($categories as $category) {
