@@ -5,20 +5,13 @@ use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\FacilityController;
 use App\Http\Controllers\Api\V1\PlaceController;
+use App\Http\Controllers\Api\V1\PlannerController;
 use App\Http\Controllers\Api\V1\ProfileController;
-use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Api\V1\TripController;
 use Illuminate\Support\Facades\Route;
 
-$notImplemented = static fn (string $endpoint): JsonResponse => response()->json([
-    'success' => false,
-    'message' => 'Endpoint is registered but not implemented yet.',
-    'data' => [
-        'endpoint' => $endpoint,
-    ],
-], 501);
-
-Route::prefix('v1')->name('api.v1.')->group(function () use ($notImplemented): void {
-    Route::prefix('auth')->name('auth.')->group(function () use ($notImplemented): void {
+Route::prefix('v1')->name('api.v1.')->group(function (): void {
+    Route::prefix('auth')->name('auth.')->group(function (): void {
         Route::post('register', [AuthController::class, 'register'])->name('register');
         Route::post('login', [AuthController::class, 'login'])->name('login');
 
@@ -39,7 +32,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () use ($notImplemented): v
         Route::get('{place:slug}', [PlaceController::class, 'show'])->name('show');
     });
 
-    Route::middleware('auth:sanctum')->group(function () use ($notImplemented): void {
+    Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
 
@@ -49,23 +42,23 @@ Route::prefix('v1')->name('api.v1.')->group(function () use ($notImplemented): v
             Route::delete('{place}', [FavoriteController::class, 'destroy'])->name('destroy');
         });
 
-        Route::prefix('planner')->name('planner.')->group(function () use ($notImplemented): void {
-            Route::post('drafts', fn (): JsonResponse => $notImplemented('planner.drafts.store'))->name('drafts.store');
-            Route::patch('drafts/{itinerary}', fn (): JsonResponse => $notImplemented('planner.drafts.update'))->name('drafts.update');
-            Route::post('generate', fn (): JsonResponse => $notImplemented('planner.generate'))->name('generate');
-            Route::post('{itinerary}/modify', fn (): JsonResponse => $notImplemented('planner.modify'))->name('modify');
+        Route::prefix('planner')->name('planner.')->group(function (): void {
+            Route::post('drafts', [PlannerController::class, 'storeDraft'])->name('drafts.store');
+            Route::patch('drafts/{itinerary}', [PlannerController::class, 'updateDraft'])->name('drafts.update');
+            Route::post('generate', [PlannerController::class, 'generate'])->name('generate');
+            Route::post('{itinerary}/modify', [PlannerController::class, 'modify'])->name('modify');
         });
 
-        Route::prefix('trips')->name('trips.')->group(function () use ($notImplemented): void {
-            Route::get('/', fn (): JsonResponse => $notImplemented('trips.index'))->name('index');
-            Route::post('/', fn (): JsonResponse => $notImplemented('trips.store'))->name('store');
-            Route::get('{itinerary}', fn (): JsonResponse => $notImplemented('trips.show'))->name('show');
-            Route::patch('{itinerary}', fn (): JsonResponse => $notImplemented('trips.update'))->name('update');
-            Route::delete('{itinerary}', fn (): JsonResponse => $notImplemented('trips.destroy'))->name('destroy');
-            Route::post('{itinerary}/save', fn (): JsonResponse => $notImplemented('trips.save'))->name('save');
-            Route::get('{itinerary}/timeline', fn (): JsonResponse => $notImplemented('trips.timeline'))->name('timeline');
-            Route::get('{itinerary}/map', fn (): JsonResponse => $notImplemented('trips.map'))->name('map');
-            Route::get('{itinerary}/budget', fn (): JsonResponse => $notImplemented('trips.budget'))->name('budget');
+        Route::prefix('trips')->name('trips.')->group(function (): void {
+            Route::get('/', [TripController::class, 'index'])->name('index');
+            Route::post('/', [TripController::class, 'store'])->name('store');
+            Route::get('{itinerary}', [TripController::class, 'show'])->name('show');
+            Route::patch('{itinerary}', [TripController::class, 'update'])->name('update');
+            Route::delete('{itinerary}', [TripController::class, 'destroy'])->name('destroy');
+            Route::post('{itinerary}/save', [TripController::class, 'save'])->name('save');
+            Route::get('{itinerary}/timeline', [TripController::class, 'timeline'])->name('timeline');
+            Route::get('{itinerary}/map', [TripController::class, 'map'])->name('map');
+            Route::get('{itinerary}/budget', [TripController::class, 'budget'])->name('budget');
         });
     });
 });
