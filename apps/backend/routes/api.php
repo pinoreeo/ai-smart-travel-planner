@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AiRequestController as AdminAiRequestController;
 use App\Http\Controllers\Api\V1\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\V1\Admin\FacilityController as AdminFacilityController;
+use App\Http\Controllers\Api\V1\Admin\ItineraryController as AdminItineraryController;
 use App\Http\Controllers\Api\V1\Admin\PlaceController as AdminPlaceController;
 use App\Http\Controllers\Api\V1\Admin\PlaceImageController as AdminPlaceImageController;
 use App\Http\Controllers\Api\V1\Admin\PlaceOpeningHourController as AdminPlaceOpeningHourController;
+use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
+use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\FacilityController;
@@ -87,6 +91,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::post('facilities/{facility}/restore', [AdminFacilityController::class, 'restore'])
                 ->name('facilities.restore');
 
+            Route::apiResource('roles', AdminRoleController::class)->only(['index', 'show']);
+            Route::put('users/{user}/roles', [AdminUserController::class, 'syncRoles'])
+                ->name('users.roles.sync');
+            Route::apiResource('users', AdminUserController::class)->only(['index', 'show', 'update']);
+
             Route::put('places/{place}/categories', [AdminPlaceController::class, 'syncCategories'])
                 ->name('places.categories.sync');
             Route::put('places/{place}/facilities', [AdminPlaceController::class, 'syncFacilities'])
@@ -117,5 +126,10 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                     Route::delete('{image}', [AdminPlaceImageController::class, 'destroy'])->name('destroy');
                     Route::post('{image}/primary', [AdminPlaceImageController::class, 'setPrimary'])->name('primary');
                 });
+
+            Route::apiResource('itineraries', AdminItineraryController::class)->only(['index', 'show']);
+            Route::apiResource('ai-requests', AdminAiRequestController::class)
+                ->only(['index', 'show'])
+                ->parameters(['ai-requests' => 'aiRequest']);
         });
 });

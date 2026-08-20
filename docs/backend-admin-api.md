@@ -355,9 +355,23 @@ Contoh tambah gambar:
 
 Kalau `is_primary=true`, gambar primary yang lama otomatis diganti.
 
-## Endpoint Admin Yang Perlu Dibuat
+### Roles
 
-Bagian di bawah ini belum diimplementasikan. Ini daftar kerja berikutnya supaya dashboard admin makin lengkap.
+```http
+GET /admin/roles
+GET /admin/roles/{role}
+```
+
+Dipakai dashboard admin buat ambil pilihan role ketika mau atur akses user.
+
+Query list yang bisa dipakai:
+
+```text
+q=admin
+is_active=true
+per_page=15
+page=1
+```
 
 ### Users
 
@@ -365,6 +379,7 @@ Bagian di bawah ini belum diimplementasikan. Ini daftar kerja berikutnya supaya 
 GET   /admin/users
 GET   /admin/users/{user}
 PATCH /admin/users/{user}
+PUT   /admin/users/{user}/roles
 ```
 
 Dipakai untuk:
@@ -372,6 +387,42 @@ Dipakai untuk:
 - lihat user yang terdaftar
 - cek role user
 - assign/remove role admin kalau dibutuhkan
+
+Query list yang bisa dipakai:
+
+```text
+q=budi
+role=admin
+per_page=15
+page=1
+```
+
+Contoh edit user:
+
+```json
+{
+  "name": "Budi Santoso",
+  "email": "budi@example.com"
+}
+```
+
+Contoh sync role user:
+
+```json
+{
+  "role_slugs": ["admin"]
+}
+```
+
+Bisa juga pakai ID:
+
+```json
+{
+  "role_ids": [1, 2]
+}
+```
+
+Catatan: sync berarti role lama user akan diganti dengan role yang dikirim.
 
 ### Itineraries
 
@@ -387,6 +438,20 @@ Ini berguna untuk:
 - cek hasil planner
 - debugging rekomendasi
 - lihat pola penggunaan
+
+Query list yang bisa dipakai:
+
+```text
+q=jogja
+user_id=3
+status=saved
+generation_type=ai_assisted
+travel_date_from=2026-08-01
+travel_date_to=2026-08-31
+with_trashed=true
+per_page=15
+page=1
+```
 
 ### AI Requests
 
@@ -406,14 +471,36 @@ Isinya bisa buat cek:
 - token usage
 - error message kalau gagal
 
+Query list yang bisa dipakai:
+
+```text
+q=pantai
+user_id=3
+itinerary_id=10
+request_type=parse_trip_request
+status=success
+model_name=gpt-4.1-mini
+created_from=2026-08-01
+created_to=2026-08-31
+per_page=15
+page=1
+```
+
+## Yang Belum Masuk Backend Internal
+
+API internal untuk client dan dashboard admin sudah ada fondasinya. Yang belum termasuk di sini adalah integrasi pihak kedua:
+
+- upload gambar beneran ke Cloudinary/S3/local storage endpoint
+- AI provider beneran untuk generate itinerary
+- maps/routing provider beneran untuk jarak, durasi, dan geometry route
+
 ## Urutan Implementasi Yang Enak
 
-Saran urutannya:
+Saran lanjutannya:
 
-1. Users dan role management.
-2. Itinerary monitoring.
-3. AI request monitoring.
-4. Integrasi upload gambar beneran, misalnya Cloudinary atau S3.
+1. Tentukan provider upload gambar.
+2. Tentukan AI provider.
+3. Tentukan maps/routing provider.
+4. Baru mulai dashboard admin dan integrasi frontend/mobile dengan API yang sudah ada.
 
-Categories, Facilities, Places, dan relasi place sudah bisa dipakai untuk mulai input data dari dashboard admin.
-
+Dashboard admin sekarang sudah bisa mulai dibangun untuk input data destinasi, kategori, fasilitas, user role, dan monitoring trip.
