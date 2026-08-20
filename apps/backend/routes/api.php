@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\FavoriteController;
 use App\Http\Controllers\Api\V1\FacilityController;
 use App\Http\Controllers\Api\V1\PlaceController;
 use App\Http\Controllers\Api\V1\ProfileController;
@@ -42,10 +43,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () use ($notImplemented): v
         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
         Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
 
-        Route::prefix('favorites')->name('favorites.')->group(function () use ($notImplemented): void {
-            Route::get('/', fn (): JsonResponse => $notImplemented('favorites.index'))->name('index');
-            Route::post('{place}', fn (): JsonResponse => $notImplemented('favorites.store'))->name('store');
-            Route::delete('{place}', fn (): JsonResponse => $notImplemented('favorites.destroy'))->name('destroy');
+        Route::prefix('favorites')->name('favorites.')->group(function (): void {
+            Route::get('/', [FavoriteController::class, 'index'])->name('index');
+            Route::post('{place}', [FavoriteController::class, 'store'])->name('store');
+            Route::delete('{place}', [FavoriteController::class, 'destroy'])->name('destroy');
         });
 
         Route::prefix('planner')->name('planner.')->group(function () use ($notImplemented): void {
