@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\V1\PlaceController;
 use App\Http\Controllers\Api\V1\PlannerController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\TripController;
+use App\Http\Controllers\Api\V1\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Api\V1\Admin\FacilityController as AdminFacilityController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
@@ -73,5 +75,13 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
                     'scope' => 'admin',
                 ],
             ]))->name('health');
+
+            Route::apiResource('categories', AdminCategoryController::class);
+            Route::post('categories/{category}/restore', [AdminCategoryController::class, 'restore'])
+                ->name('categories.restore');
+
+            Route::apiResource('facilities', AdminFacilityController::class);
+            Route::post('facilities/{facility}/restore', [AdminFacilityController::class, 'restore'])
+                ->name('facilities.restore');
         });
 });
