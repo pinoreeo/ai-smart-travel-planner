@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\FacilityController;
 use App\Http\Controllers\Api\V1\PlaceController;
+use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Route;
 
@@ -16,11 +18,13 @@ $notImplemented = static fn (string $endpoint): JsonResponse => response()->json
 
 Route::prefix('v1')->name('api.v1.')->group(function () use ($notImplemented): void {
     Route::prefix('auth')->name('auth.')->group(function () use ($notImplemented): void {
-        Route::post('register', fn (): JsonResponse => $notImplemented('auth.register'))->name('register');
-        Route::post('login', fn (): JsonResponse => $notImplemented('auth.login'))->name('login');
+        Route::post('register', [AuthController::class, 'register'])->name('register');
+        Route::post('login', [AuthController::class, 'login'])->name('login');
 
-        Route::get('me', fn (): JsonResponse => $notImplemented('auth.me'))->name('me');
-        Route::post('logout', fn (): JsonResponse => $notImplemented('auth.logout'))->name('logout');
+        Route::middleware('auth:sanctum')->group(function (): void {
+            Route::get('me', [AuthController::class, 'me'])->name('me');
+            Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+        });
     });
 
     Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -34,9 +38,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () use ($notImplemented): v
         Route::get('{place:slug}', [PlaceController::class, 'show'])->name('show');
     });
 
-    Route::group([], function () use ($notImplemented): void {
-        Route::get('profile', fn (): JsonResponse => $notImplemented('profile.show'))->name('profile.show');
-        Route::patch('profile', fn (): JsonResponse => $notImplemented('profile.update'))->name('profile.update');
+    Route::middleware('auth:sanctum')->group(function () use ($notImplemented): void {
+        Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
+        Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
 
         Route::prefix('favorites')->name('favorites.')->group(function () use ($notImplemented): void {
             Route::get('/', fn (): JsonResponse => $notImplemented('favorites.index'))->name('index');
