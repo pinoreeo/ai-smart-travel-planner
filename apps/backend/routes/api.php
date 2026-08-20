@@ -61,4 +61,17 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::get('{itinerary}/budget', [TripController::class, 'budget'])->name('budget');
         });
     });
+
+    Route::prefix('admin')
+        ->name('admin.')
+        ->middleware(['auth:sanctum', 'admin'])
+        ->group(function (): void {
+            Route::get('health', fn () => response()->json([
+                'success' => true,
+                'message' => 'Admin API is available.',
+                'data' => [
+                    'scope' => 'admin',
+                ],
+            ]))->name('health');
+        });
 });
