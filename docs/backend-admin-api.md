@@ -75,10 +75,6 @@ Response:
 
 Endpoint ini dipakai untuk memastikan token admin dan middleware admin sudah jalan.
 
-## Endpoint Admin Yang Perlu Dibuat
-
-Bagian di bawah ini belum semuanya diimplementasikan. Ini daftar kerja supaya dashboard admin tidak kecampur dengan API Android/user.
-
 ### Categories
 
 ```http
@@ -87,6 +83,7 @@ POST   /admin/categories
 GET    /admin/categories/{category}
 PATCH  /admin/categories/{category}
 DELETE /admin/categories/{category}
+POST   /admin/categories/{category}/restore
 ```
 
 Dipakai admin untuk:
@@ -95,6 +92,17 @@ Dipakai admin untuk:
 - edit nama, slug, icon, dan deskripsi
 - aktif/nonaktif kategori
 - hapus kategori kalau memang aman
+- restore kategori yang kena soft delete
+
+Query list yang bisa dipakai:
+
+```text
+q=alam
+is_active=true
+with_trashed=true
+per_page=15
+page=1
+```
 
 ### Facilities
 
@@ -104,6 +112,7 @@ POST   /admin/facilities
 GET    /admin/facilities/{facility}
 PATCH  /admin/facilities/{facility}
 DELETE /admin/facilities/{facility}
+POST   /admin/facilities/{facility}/restore
 ```
 
 Dipakai admin untuk:
@@ -111,6 +120,21 @@ Dipakai admin untuk:
 - tambah fasilitas
 - edit nama, slug, icon, dan deskripsi
 - aktif/nonaktif fasilitas
+- restore fasilitas yang kena soft delete
+
+Query list yang bisa dipakai:
+
+```text
+q=parkir
+is_active=true
+with_trashed=true
+per_page=15
+page=1
+```
+
+## Endpoint Admin Yang Perlu Dibuat
+
+Bagian di bawah ini belum diimplementasikan. Ini daftar kerja supaya dashboard admin tidak kecampur dengan API Android/user.
 
 ### Places
 
