@@ -20,6 +20,7 @@ class PlaceCardResource extends JsonResource
             'ticket_price' => (float) $this->ticket_price,
             'recommended_duration_minutes' => $this->recommended_duration_minutes,
             'is_featured' => $this->is_featured,
+            'is_favorite' => (bool) ($this->is_favorite ?? false),
             'distance_km' => $this->when($this->hasDistance(), round((float) $this->distance_km, 2)),
             'categories' => CategoryResource::collection($this->whenLoaded('categories'))->resolve($request),
             'primary_image' => $this->whenLoaded(

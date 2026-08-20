@@ -18,8 +18,9 @@ class PlaceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $filters = $this->validatedListFilters($request);
+        $userId = $request->user('sanctum')?->id;
 
-        $query = $this->basePlaceQuery();
+        $query = $this->basePlaceQuery($userId);
         $this->applyFilters($query, $filters);
 
         $hasDistance = isset($filters['latitude'], $filters['longitude']);
@@ -43,7 +44,7 @@ class PlaceController extends Controller
     {
         $limit = min(max((int) $request->integer('limit', 10), 1), 20);
 
-        $places = $this->basePlaceQuery()
+        $places = $this->basePlaceQuery($request->user('sanctum')?->id)
             ->where('is_featured', true)
             ->orderBy('name')
             ->limit($limit)
@@ -71,7 +72,7 @@ class PlaceController extends Controller
         $longitude = (float) $filters['longitude'];
         $radiusKm = (float) ($filters['radius_km'] ?? 25);
 
-        $query = $this->basePlaceQuery();
+        $query = $this->basePlaceQuery($request->user('sanctum')?->id);
         $this->applyFilters($query, $filters);
         $this->selectDistance($query, $latitude, $longitude);
         $this->whereWithinRadius($query, $latitude, $longitude, $radiusKm);
@@ -91,7 +92,7 @@ class PlaceController extends Controller
     {
         $filters = $this->validatedListFilters($request);
 
-        $query = $this->basePlaceQuery();
+        $query = $this->basePlaceQuery($request->user('sanctum')?->id);
         $this->applyFilters($query, $filters);
         $this->applySort($query, $filters);
 
@@ -108,6 +109,13 @@ class PlaceController extends Controller
     {
         abort_if($place->status !== 'published', 404);
 
+        $place->setAttribute(
+            'is_favorite',
+            $request->user('sanctum')
+                ? $place->favorites()->where('user_id', $request->user('sanctum')->id)->exists()
+                : false
+        );
+
         $place->load([
             'categories' => fn ($query) => $query->where('is_active', true)->orderBy('name'),
             'facilities' => fn ($query) => $query->where('is_active', true)->orderBy('name'),
@@ -122,15 +130,23 @@ class PlaceController extends Controller
         );
     }
 
-    private function basePlaceQuery(): Builder
+    private function basePlaceQuery(?int $userId = null): Builder
     {
-        return Place::query()
+        $query = Place::query()
             ->select('trp_places.*')
             ->where('status', 'published')
             ->with([
                 'categories' => fn ($query) => $query->where('is_active', true)->orderBy('name'),
                 'primaryImage',
             ]);
+
+        if ($userId !== null) {
+            $query->withExists([
+                'favorites as is_favorite' => fn ($query) => $query->where('user_id', $userId),
+            ]);
+        }
+
+        return $query;
     }
 
     private function orderOpeningHours($query)
