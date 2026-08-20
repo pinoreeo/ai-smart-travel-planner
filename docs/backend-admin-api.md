@@ -132,10 +132,6 @@ per_page=15
 page=1
 ```
 
-## Endpoint Admin Yang Perlu Dibuat
-
-Bagian di bawah ini belum diimplementasikan. Ini daftar kerja supaya dashboard admin tidak kecampur dengan API Android/user.
-
 ### Places
 
 ```http
@@ -146,6 +142,7 @@ PATCH  /admin/places/{place}
 DELETE /admin/places/{place}
 POST   /admin/places/{place}/publish
 POST   /admin/places/{place}/unpublish
+POST   /admin/places/{place}/restore
 ```
 
 Dipakai admin untuk kelola destinasi:
@@ -156,15 +153,110 @@ Dipakai admin untuk kelola destinasi:
 - tandai destinasi sebagai featured
 - update `last_verified_at`
 
+Query list yang bisa dipakai:
+
+```text
+q=borobudur
+status=published
+city=Magelang
+province=Jawa Tengah
+place_type=outdoor
+featured=true
+category=alam,budaya
+facility=parkir,toilet
+with_trashed=true
+sort=newest
+per_page=15
+page=1
+```
+
+Nilai `sort` yang tersedia:
+
+```text
+name
+newest
+updated
+price_low
+price_high
+```
+
+Contoh body untuk tambah destinasi:
+
+```json
+{
+  "name": "Tebing Breksi",
+  "slug": "tebing-breksi",
+  "short_description": "Destinasi tebing batu dengan view sunset.",
+  "description": "Cocok buat foto, lihat pemandangan, dan jalan santai.",
+  "address": "Sambirejo, Prambanan",
+  "city": "Sleman",
+  "province": "DI Yogyakarta",
+  "postal_code": "55572",
+  "latitude": -7.7816,
+  "longitude": 110.5046,
+  "ticket_price": 10000,
+  "parking_price_motorcycle": 3000,
+  "parking_price_car": 5000,
+  "recommended_duration_minutes": 90,
+  "place_type": "outdoor",
+  "phone": "0274123456",
+  "website_url": "https://example.com/tebing-breksi",
+  "instagram_url": "https://instagram.com/tebingbreksi",
+  "status": "draft",
+  "is_featured": false,
+  "category_ids": [1, 2],
+  "facilities": [
+    {
+      "facility_id": 1,
+      "notes": "Area parkir motor dan mobil tersedia"
+    }
+  ],
+  "opening_hours": [
+    {
+      "day_of_week": "monday",
+      "sort_order": 1,
+      "open_time": "08:00",
+      "close_time": "17:00",
+      "is_closed": false
+    }
+  ],
+  "images": [
+    {
+      "image_url": "https://example.com/images/tebing-breksi.jpg",
+      "caption": "Area utama Tebing Breksi",
+      "alt_text": "Tebing Breksi saat sore hari",
+      "is_primary": true,
+      "sort_order": 1
+    }
+  ]
+}
+```
+
+Untuk edit destinasi, kirim field yang mau diubah saja:
+
+```http
+PATCH /admin/places/{place}
+```
+
+Contoh:
+
+```json
+{
+  "ticket_price": 15000,
+  "is_featured": true,
+  "status": "published"
+}
+```
+
 ### Place Categories
 
 ```http
 PUT /admin/places/{place}/categories
 ```
 
-Dipakai untuk sync kategori sebuah destinasi.
+Dipakai untuk sync kategori sebuah destinasi. Artinya daftar kategori lama akan diganti dengan daftar yang dikirim.
 
-Contoh body nantinya:
+Contoh body:
 
 ```json
 {
@@ -178,9 +270,7 @@ Contoh body nantinya:
 PUT /admin/places/{place}/facilities
 ```
 
-Dipakai untuk sync fasilitas sebuah destinasi.
-
-Nanti bisa support catatan per fasilitas, misalnya:
+Dipakai untuk sync fasilitas sebuah destinasi. Bisa kasih catatan per fasilitas, misalnya:
 
 ```json
 {
@@ -206,6 +296,30 @@ Dipakai untuk kelola jam buka.
 
 Schema sudah mendukung lebih dari satu slot per hari lewat `sort_order`, jadi bisa handle kasus seperti buka pagi lalu buka lagi sore.
 
+Contoh tambah jam buka:
+
+```json
+{
+  "day_of_week": "saturday",
+  "sort_order": 1,
+  "open_time": "08:00",
+  "close_time": "18:00",
+  "is_closed": false,
+  "notes": "Weekend biasanya lebih ramai"
+}
+```
+
+Kalau tutup:
+
+```json
+{
+  "day_of_week": "monday",
+  "sort_order": 1,
+  "is_closed": true,
+  "notes": "Tutup untuk maintenance"
+}
+```
+
 ### Place Images
 
 ```http
@@ -225,6 +339,25 @@ Dipakai untuk:
 - hapus gambar
 
 Catatan: provider upload gambar belum ditentukan. Bisa pakai local storage dulu, lalu nanti pindah ke Cloudinary/S3 kalau perlu.
+
+Contoh tambah gambar:
+
+```json
+{
+  "image_url": "https://example.com/images/tempat.jpg",
+  "public_id": "places/tempat",
+  "caption": "Spot foto utama",
+  "alt_text": "Area destinasi dengan pemandangan terbuka",
+  "is_primary": true,
+  "sort_order": 1
+}
+```
+
+Kalau `is_primary=true`, gambar primary yang lama otomatis diganti.
+
+## Endpoint Admin Yang Perlu Dibuat
+
+Bagian di bawah ini belum diimplementasikan. Ini daftar kerja berikutnya supaya dashboard admin makin lengkap.
 
 ### Users
 
@@ -277,13 +410,10 @@ Isinya bisa buat cek:
 
 Saran urutannya:
 
-1. Categories CRUD.
-2. Facilities CRUD.
-3. Places CRUD.
-4. Relasi place: categories, facilities, opening hours, images.
-5. Users dan role management.
-6. Itinerary monitoring.
-7. AI request monitoring.
+1. Users dan role management.
+2. Itinerary monitoring.
+3. AI request monitoring.
+4. Integrasi upload gambar beneran, misalnya Cloudinary atau S3.
 
-Kalau mau cepat punya dashboard admin yang bisa dipakai input data, mulai dari Categories, Facilities, dan Places dulu.
+Categories, Facilities, Places, dan relasi place sudah bisa dipakai untuk mulai input data dari dashboard admin.
 
