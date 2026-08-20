@@ -1,25 +1,23 @@
-# Backend Admin API Documentation
+# Backend Admin API
 
-Dokumentasi ini adalah rencana kontrak Admin API untuk dashboard web admin AI Smart Travel Planner.
+Dokumen ini buat pegangan dashboard admin web.
 
-## Scope
-
-Admin API berbeda dari Client API.
+Bedanya dengan Client API:
 
 ```text
-/api/v1/...        Client API untuk Android dan web user-facing
-/api/v1/admin/...  Admin API untuk dashboard admin web
+/api/v1/...        untuk Android dan web user-facing
+/api/v1/admin/...  untuk dashboard admin
 ```
 
-Client API saat ini sudah didokumentasikan di:
+Dokumen API untuk Android dan web user-facing ada di:
 
 ```text
 docs/backend-client-api.md
 ```
 
-## Authentication
+## Akses Admin
 
-Admin API memakai Bearer token dari endpoint client auth yang sama:
+Admin API tetap pakai token dari endpoint login yang sama:
 
 ```http
 Authorization: Bearer <access_token>
@@ -27,13 +25,13 @@ Accept: application/json
 Content-Type: application/json
 ```
 
-User juga wajib punya role:
+Bedanya, user harus punya role:
 
 ```text
 admin
 ```
 
-Jika token tidak valid:
+Kalau belum login:
 
 ```json
 {
@@ -43,7 +41,7 @@ Jika token tidak valid:
 }
 ```
 
-Jika user bukan admin:
+Kalau login sebagai user biasa:
 
 ```json
 {
@@ -53,15 +51,15 @@ Jika user bukan admin:
 }
 ```
 
-## Current Admin Route
+## Yang Sudah Ada Sekarang
 
-### Health
+### Health Check Admin
 
 ```http
 GET /admin/health
 ```
 
-Protected: yes, admin only.
+Butuh token admin.
 
 Response:
 
@@ -75,7 +73,11 @@ Response:
 }
 ```
 
-## Planned Admin Endpoints
+Endpoint ini dipakai untuk memastikan token admin dan middleware admin sudah jalan.
+
+## Endpoint Admin Yang Perlu Dibuat
+
+Bagian di bawah ini belum semuanya diimplementasikan. Ini daftar kerja supaya dashboard admin tidak kecampur dengan API Android/user.
 
 ### Categories
 
@@ -87,11 +89,12 @@ PATCH  /admin/categories/{category}
 DELETE /admin/categories/{category}
 ```
 
-Purpose:
+Dipakai admin untuk:
 
-- Manage category master data.
-- Enable/disable category.
-- Edit icon and description.
+- tambah kategori
+- edit nama, slug, icon, dan deskripsi
+- aktif/nonaktif kategori
+- hapus kategori kalau memang aman
 
 ### Facilities
 
@@ -103,11 +106,11 @@ PATCH  /admin/facilities/{facility}
 DELETE /admin/facilities/{facility}
 ```
 
-Purpose:
+Dipakai admin untuk:
 
-- Manage facility master data.
-- Enable/disable facility.
-- Edit icon and description.
+- tambah fasilitas
+- edit nama, slug, icon, dan deskripsi
+- aktif/nonaktif fasilitas
 
 ### Places
 
@@ -121,11 +124,13 @@ POST   /admin/places/{place}/publish
 POST   /admin/places/{place}/unpublish
 ```
 
-Purpose:
+Dipakai admin untuk kelola destinasi:
 
-- Manage destination data.
-- Draft/publish/inactive workflow.
-- Manage price, location, duration, type, and verification status.
+- tambah destinasi baru
+- edit deskripsi, alamat, koordinat, harga, durasi, dan tipe tempat
+- set status `draft`, `published`, atau `inactive`
+- tandai destinasi sebagai featured
+- update `last_verified_at`
 
 ### Place Categories
 
@@ -133,9 +138,15 @@ Purpose:
 PUT /admin/places/{place}/categories
 ```
 
-Purpose:
+Dipakai untuk sync kategori sebuah destinasi.
 
-- Sync categories for a place.
+Contoh body nantinya:
+
+```json
+{
+  "category_ids": [1, 5, 7]
+}
+```
 
 ### Place Facilities
 
@@ -143,12 +154,22 @@ Purpose:
 PUT /admin/places/{place}/facilities
 ```
 
-Purpose:
+Dipakai untuk sync fasilitas sebuah destinasi.
 
-- Sync facilities for a place.
-- Store facility notes where needed.
+Nanti bisa support catatan per fasilitas, misalnya:
 
-### Place Opening Hours
+```json
+{
+  "facilities": [
+    {
+      "facility_id": 1,
+      "notes": "Parkir motor dan mobil tersedia"
+    }
+  ]
+}
+```
+
+### Opening Hours
 
 ```http
 GET    /admin/places/{place}/opening-hours
@@ -157,10 +178,9 @@ PATCH  /admin/places/{place}/opening-hours/{openingHour}
 DELETE /admin/places/{place}/opening-hours/{openingHour}
 ```
 
-Purpose:
+Dipakai untuk kelola jam buka.
 
-- Manage weekly opening hours.
-- Support multiple time slots per day through `sort_order`.
+Schema sudah mendukung lebih dari satu slot per hari lewat `sort_order`, jadi bisa handle kasus seperti buka pagi lalu buka lagi sore.
 
 ### Place Images
 
@@ -172,13 +192,15 @@ DELETE /admin/places/{place}/images/{image}
 POST   /admin/places/{place}/images/{image}/primary
 ```
 
-Purpose:
+Dipakai untuk:
 
-- Manage destination gallery.
-- Set primary image.
-- Reorder images.
+- tambah gambar destinasi
+- edit caption dan alt text
+- ubah urutan gambar
+- set primary image
+- hapus gambar
 
-Image upload storage provider is not decided yet.
+Catatan: provider upload gambar belum ditentukan. Bisa pakai local storage dulu, lalu nanti pindah ke Cloudinary/S3 kalau perlu.
 
 ### Users
 
@@ -188,11 +210,11 @@ GET   /admin/users/{user}
 PATCH /admin/users/{user}
 ```
 
-Purpose:
+Dipakai untuk:
 
-- View registered users.
-- Assign or remove roles.
-- Support admin operations.
+- lihat user yang terdaftar
+- cek role user
+- assign/remove role admin kalau dibutuhkan
 
 ### Itineraries
 
@@ -201,11 +223,13 @@ GET /admin/itineraries
 GET /admin/itineraries/{itinerary}
 ```
 
-Purpose:
+Dipakai admin untuk monitor itinerary yang dibuat user.
 
-- Monitor generated trips.
-- Debug planner results.
-- Review usage patterns.
+Ini berguna untuk:
+
+- cek hasil planner
+- debugging rekomendasi
+- lihat pola penggunaan
 
 ### AI Requests
 
@@ -214,19 +238,28 @@ GET /admin/ai-requests
 GET /admin/ai-requests/{aiRequest}
 ```
 
-Purpose:
+Dipakai nanti setelah AI provider diintegrasikan.
 
-- Inspect AI generation logs.
-- Track model name, token usage, status, and errors.
+Isinya bisa buat cek:
 
-## Implementation Priority
+- prompt/request user
+- parameter hasil parsing
+- model yang dipakai
+- status request
+- token usage
+- error message kalau gagal
 
-Recommended order:
+## Urutan Implementasi Yang Enak
 
-1. Admin middleware and health route.
-2. Category and facility CRUD.
-3. Place CRUD.
-4. Place relations: categories, facilities, opening hours, images.
-5. User and role management.
-6. Itinerary and AI request monitoring.
+Saran urutannya:
+
+1. Categories CRUD.
+2. Facilities CRUD.
+3. Places CRUD.
+4. Relasi place: categories, facilities, opening hours, images.
+5. Users dan role management.
+6. Itinerary monitoring.
+7. AI request monitoring.
+
+Kalau mau cepat punya dashboard admin yang bisa dipakai input data, mulai dari Categories, Facilities, dan Places dulu.
 

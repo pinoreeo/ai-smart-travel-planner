@@ -1,35 +1,33 @@
-# Backend Client API Documentation
+# Backend Client API
 
-Dokumentasi ini adalah kontrak REST API client untuk AI Smart Travel Planner. Target pembaca adalah tim Android dan tim web user-facing.
+Dokumen ini jadi pegangan buat tim Android dan web user-facing saat manggil API.
 
-API ini bukan untuk dashboard admin. Kontrak Admin API dipisahkan di:
+Bagian ini khusus API user biasa: login, explore destinasi, favorite, bikin itinerary, dan lihat trip. Untuk dashboard admin, lihat:
 
 ```text
 docs/backend-admin-api.md
 ```
 
-Pembagian scope:
+Pembagiannya:
 
 ```text
-/api/v1/...        Client API untuk Android dan web user-facing
-/api/v1/admin/...  Admin API untuk dashboard admin web
+/api/v1/...        untuk Android dan web user-facing
+/api/v1/admin/...  untuk dashboard admin
 ```
 
 ## Base URL
 
-Local development:
+Kalau jalan lokal:
 
 ```text
 http://127.0.0.1:8000/api/v1
 ```
 
-Jika backend dijalankan di port lain, ganti host/port sesuai environment lokal.
+Kalau port backend beda, tinggal sesuaikan host/port-nya.
 
-## Authentication
+## Header
 
-API memakai Laravel Sanctum personal access token.
-
-Protected endpoint wajib memakai header:
+Endpoint yang butuh login wajib kirim:
 
 ```http
 Authorization: Bearer <access_token>
@@ -37,11 +35,11 @@ Accept: application/json
 Content-Type: application/json
 ```
 
-Token didapat dari endpoint `register` atau `login`.
+Token didapat dari `POST /auth/register` atau `POST /auth/login`.
 
-## Response Format
+## Pola Response
 
-Response sukses:
+Kalau sukses:
 
 ```json
 {
@@ -51,7 +49,7 @@ Response sukses:
 }
 ```
 
-Response sukses dengan pagination:
+Kalau list pakai pagination:
 
 ```json
 {
@@ -71,7 +69,7 @@ Response sukses dengan pagination:
 }
 ```
 
-Validation error:
+Kalau validasi gagal:
 
 ```json
 {
@@ -83,7 +81,7 @@ Validation error:
 }
 ```
 
-Unauthenticated:
+Kalau belum login atau token salah:
 
 ```json
 {
@@ -93,17 +91,18 @@ Unauthenticated:
 }
 ```
 
-Common status codes:
+Status code yang sering muncul:
 
 ```text
-200 OK
-201 Created
-401 Unauthenticated
-404 Not Found
-422 Validation Error
+200 sukses
+201 berhasil dibuat
+401 belum login / token salah
+403 tidak punya akses
+404 data tidak ditemukan
+422 validasi gagal
 ```
 
-## Auth API
+## Auth
 
 ### Register
 
@@ -123,7 +122,7 @@ Body:
 }
 ```
 
-Response `201`:
+Response berisi token dan data user:
 
 ```json
 {
@@ -165,39 +164,15 @@ Body:
 }
 ```
 
-Response `200`:
+Response-nya mirip register: dapat `access_token`, `token_type`, dan data user.
 
-```json
-{
-  "success": true,
-  "message": "Login successful.",
-  "data": {
-    "token_type": "Bearer",
-    "access_token": "1|token",
-    "user": {
-      "id": 1,
-      "name": "Demo User",
-      "email": "user@travelplanner.local",
-      "email_verified_at": "2026-08-20T00:00:00.000000Z",
-      "roles": [
-        {
-          "id": 2,
-          "name": "User",
-          "slug": "user"
-        }
-      ]
-    }
-  }
-}
-```
-
-### Me
+### Ambil User Login
 
 ```http
 GET /auth/me
 ```
 
-Protected: yes.
+Butuh token.
 
 ### Logout
 
@@ -205,27 +180,17 @@ Protected: yes.
 POST /auth/logout
 ```
 
-Protected: yes.
+Butuh token. Token yang sedang dipakai akan dihapus.
 
-Response:
+## Profile
 
-```json
-{
-  "success": true,
-  "message": "Logout successful.",
-  "data": null
-}
-```
-
-## Profile API
-
-### Get Profile
+### Lihat Profile
 
 ```http
 GET /profile
 ```
 
-Protected: yes.
+Butuh token.
 
 ### Update Profile
 
@@ -233,7 +198,7 @@ Protected: yes.
 PATCH /profile
 ```
 
-Protected: yes.
+Butuh token.
 
 Body:
 
@@ -244,9 +209,9 @@ Body:
 }
 ```
 
-Fields are optional, but at least one field should be sent by the client.
+Kirim field yang mau diubah saja.
 
-## Master Data API
+## Master Data
 
 ### Categories
 
@@ -254,22 +219,18 @@ Fields are optional, but at least one field should be sent by the client.
 GET /categories
 ```
 
-Response:
+Dipakai untuk chip kategori di Home, Explore, dan Planner interests.
+
+Contoh item:
 
 ```json
 {
-  "success": true,
-  "message": "Categories retrieved successfully.",
-  "data": [
-    {
-      "id": 1,
-      "name": "Alam",
-      "slug": "alam",
-      "description": "Wisata alam seperti air terjun, pegunungan, taman, dan pemandangan terbuka.",
-      "icon": "leaf",
-      "is_active": true
-    }
-  ]
+  "id": 1,
+  "name": "Alam",
+  "slug": "alam",
+  "description": "Wisata alam seperti air terjun, pegunungan, taman, dan pemandangan terbuka.",
+  "icon": "leaf",
+  "is_active": true
 }
 ```
 
@@ -279,7 +240,9 @@ Response:
 GET /facilities
 ```
 
-Response item shape:
+Dipakai untuk filter atau detail destinasi.
+
+Contoh item:
 
 ```json
 {
@@ -292,7 +255,7 @@ Response item shape:
 }
 ```
 
-## Places API
+## Places
 
 ### List Places
 
@@ -300,7 +263,7 @@ Response item shape:
 GET /places
 ```
 
-Optional query:
+Query yang bisa dipakai:
 
 ```text
 q=curug
@@ -318,10 +281,11 @@ per_page=10
 page=1
 ```
 
-Notes:
+Catatan:
 
-- `distance_km` appears when `latitude` and `longitude` are sent.
-- `is_favorite` is `true` only when request includes a valid Bearer token and the user has favorited the place.
+- Kalau kirim `latitude` dan `longitude`, response akan punya `distance_km`.
+- Kalau kirim token, response bisa punya `is_favorite=true`.
+- Kalau tidak kirim token, `is_favorite` default `false`.
 
 ### Featured Places
 
@@ -329,20 +293,22 @@ Notes:
 GET /places/featured?limit=10
 ```
 
+Dipakai untuk section Featured Destinations.
+
 ### Nearby Places
 
 ```http
 GET /places/nearby?latitude=-7.42&longitude=109.23&radius_km=30
 ```
 
-Required query:
+Wajib kirim:
 
 ```text
 latitude
 longitude
 ```
 
-Optional query:
+Opsional:
 
 ```text
 radius_km=25
@@ -358,21 +324,21 @@ per_page=10
 GET /places/search?q=curug
 ```
 
-Supports the same filters as `GET /places`.
+Filter yang didukung sama seperti `GET /places`.
 
-### Place Detail
+### Detail Place
 
 ```http
 GET /places/{slug}
 ```
 
-Example:
+Contoh:
 
 ```http
 GET /places/curug-bayan
 ```
 
-Response data includes:
+Data detail berisi info lengkap untuk halaman Destination Detail:
 
 ```json
 {
@@ -406,9 +372,9 @@ Response data includes:
 }
 ```
 
-## Favorites API
+## Favorites
 
-All favorites endpoints are protected.
+Semua endpoint favorites butuh token.
 
 ### List Favorites
 
@@ -416,71 +382,48 @@ All favorites endpoints are protected.
 GET /favorites
 ```
 
-Optional query:
+Query opsional:
 
 ```text
 per_page=10
 page=1
 ```
 
-### Add Favorite
+### Tambah Favorite
 
 ```http
 POST /favorites/{place}
 ```
 
-`{place}` uses place ID, not slug.
+`{place}` pakai ID place, bukan slug.
 
-Example:
+Contoh:
 
 ```http
 POST /favorites/2
 ```
 
-Response:
-
-```json
-{
-  "success": true,
-  "message": "Place added to favorites.",
-  "data": {
-    "favorite_id": 1,
-    "is_favorite": true,
-    "place": {}
-  }
-}
-```
-
-### Remove Favorite
+### Hapus Favorite
 
 ```http
 DELETE /favorites/{place}
 ```
 
-Response:
+Response akan mengembalikan `is_favorite=false`.
 
-```json
-{
-  "success": true,
-  "message": "Place removed from favorites.",
-  "data": {
-    "is_favorite": false,
-    "place": {}
-  }
-}
-```
+## Planner
 
-## Planner API
+Semua endpoint planner butuh token.
 
-All planner endpoints are protected.
-
-### Create Draft
+### Buat Draft
 
 ```http
 POST /planner/drafts
 ```
 
-Body can be partial:
+Body boleh partial. Cocok untuk menyimpan progress step planner.
+
+Contoh:
 
 ```json
 {
@@ -506,7 +449,7 @@ Body can be partial:
 PATCH /planner/drafts/{itinerary}
 ```
 
-Body can contain any field from Create Draft.
+Body boleh isi field apa pun dari draft.
 
 ### Generate Itinerary
 
@@ -514,7 +457,7 @@ Body can contain any field from Create Draft.
 POST /planner/generate
 ```
 
-Required body:
+Body minimal:
 
 ```json
 {
@@ -532,7 +475,7 @@ Required body:
 }
 ```
 
-Optional:
+Bisa juga kirim:
 
 ```json
 {
@@ -542,18 +485,24 @@ Optional:
 }
 ```
 
-Current behavior:
+Untuk sekarang, generate itinerary belum memanggil AI provider. Backend masih memilih destinasi secara deterministic dari data tempat yang sudah ada, lalu menghitung estimasi waktu, jarak, dan budget.
 
-- Generates itinerary deterministically from published places.
-- Filters by selected categories.
-- Estimates travel duration using transport mode.
-- Estimates ticket, parking, transport, and food costs.
-- Creates timeline items and simple GeoJSON route lines.
+Yang sudah dihitung:
 
-Important limitation:
+- waktu perjalanan
+- waktu kunjungan
+- ticket cost
+- parking cost
+- transport cost
+- food estimate
+- total dan remaining budget
+- route geometry sederhana
 
-- This endpoint does not call an AI provider yet.
-- Route geometry is currently a straight `LineString`, not real road routing.
+Yang belum:
+
+- AI recommendation beneran
+- route jalan asli dari maps provider
+- geocoding alamat
 
 ### Modify Itinerary
 
@@ -561,7 +510,7 @@ Important limitation:
 POST /planner/{itinerary}/modify
 ```
 
-Body:
+Contoh:
 
 ```json
 {
@@ -571,11 +520,11 @@ Body:
 }
 ```
 
-Set `regenerate=true` to rebuild itinerary items.
+Kalau `regenerate=true`, item itinerary akan dibangun ulang.
 
-## Trips API
+## Trips
 
-All trips endpoints are protected.
+Semua endpoint trips butuh token.
 
 ### List Trips
 
@@ -583,7 +532,7 @@ All trips endpoints are protected.
 GET /trips
 ```
 
-Optional query:
+Query opsional:
 
 ```text
 status=draft|generated|saved|completed|cancelled|upcoming|past
@@ -591,13 +540,13 @@ per_page=10
 page=1
 ```
 
-### Create Trip
+### Buat Trip Manual
 
 ```http
 POST /trips
 ```
 
-Body:
+Contoh:
 
 ```json
 {
@@ -617,7 +566,7 @@ Body:
 }
 ```
 
-### Trip Detail
+### Detail Trip
 
 ```http
 GET /trips/{itinerary}
@@ -641,21 +590,23 @@ DELETE /trips/{itinerary}
 POST /trips/{itinerary}/save
 ```
 
-Changes itinerary status to `saved`.
+Ini mengubah status itinerary menjadi `saved`.
 
-### Trip Timeline
+### Timeline
 
 ```http
 GET /trips/{itinerary}/timeline
 ```
 
-### Trip Map
+Dipakai untuk tab Timeline di generated itinerary.
+
+### Map
 
 ```http
 GET /trips/{itinerary}/map
 ```
 
-Response data:
+Contoh bentuk data:
 
 ```json
 {
@@ -685,13 +636,13 @@ Response data:
 }
 ```
 
-### Trip Budget
+### Budget
 
 ```http
 GET /trips/{itinerary}/budget
 ```
 
-Response data:
+Contoh:
 
 ```json
 {
@@ -705,25 +656,23 @@ Response data:
 }
 ```
 
-## Main Android Flow
+## Flow Yang Disarankan
 
-Recommended integration order:
+Untuk Android atau web user-facing, flow paling aman:
 
-1. `POST /auth/login`
-2. Save `data.access_token` securely.
-3. `GET /categories`
-4. `GET /places/featured`
-5. `GET /places/search?q=curug`
-6. `GET /places/{slug}`
-7. `POST /favorites/{place}` or `DELETE /favorites/{place}`
-8. `POST /planner/generate`
-9. `POST /trips/{itinerary}/save`
-10. `GET /trips?status=saved`
-11. `GET /trips/{itinerary}/timeline`
-12. `GET /trips/{itinerary}/map`
-13. `GET /trips/{itinerary}/budget`
+1. Login lewat `POST /auth/login`.
+2. Simpan `data.access_token`.
+3. Ambil kategori dengan `GET /categories`.
+4. Ambil featured destinations dengan `GET /places/featured`.
+5. Search pakai `GET /places/search?q=curug`.
+6. Buka detail destinasi pakai `GET /places/{slug}`.
+7. Toggle favorite pakai `POST /favorites/{place}` atau `DELETE /favorites/{place}`.
+8. Generate trip pakai `POST /planner/generate`.
+9. Save hasilnya pakai `POST /trips/{itinerary}/save`.
+10. Tampilkan trip tersimpan pakai `GET /trips?status=saved`.
+11. Ambil timeline/map/budget dari endpoint trips.
 
-## Seeded Demo Accounts
+## Akun Demo
 
 ```text
 Admin:
@@ -735,12 +684,13 @@ email: user@travelplanner.local
 password: User123!
 ```
 
-Use the user account for Android integration testing.
+Untuk integrasi Android/web user-facing, pakai akun `User`.
 
-## Current Limitations
+## Catatan Saat Ini
 
-- Planner generation is deterministic and does not call an AI provider yet.
-- Routing is estimated with haversine distance and simple GeoJSON lines.
-- Geocoding/reverse geocoding is not integrated yet.
-- `trp_ai_requests` exists but is not yet written by planner endpoints.
-- Image upload/admin panel is not included in this internal mobile API scope.
+- Planner belum pakai AI provider.
+- Routing belum pakai maps provider, masih estimasi jarak lurus dan GeoJSON sederhana.
+- Geocoding alamat belum ada.
+- Tabel `trp_ai_requests` sudah ada, tapi belum dipakai oleh planner.
+- Upload image dan dashboard admin tidak masuk scope Client API.
+
