@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Admin\PlaceImageController as AdminPlaceImageCon
 use App\Http\Controllers\Api\V1\Admin\PlaceImportController as AdminPlaceImportController;
 use App\Http\Controllers\Api\V1\Admin\PlaceOpeningHourController as AdminPlaceOpeningHourController;
 use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
+use App\Http\Controllers\Api\V1\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
@@ -96,6 +97,9 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::put('users/{user}/roles', [AdminUserController::class, 'syncRoles'])
                 ->name('users.roles.sync');
             Route::apiResource('users', AdminUserController::class)->only(['index', 'show', 'update']);
+
+            Route::post('uploads/images', [AdminUploadController::class, 'image'])
+                ->name('uploads.images.store');
 
             Route::get('place-imports/osm/preview', [AdminPlaceImportController::class, 'previewOsm'])
                 ->name('place-imports.osm.preview');
