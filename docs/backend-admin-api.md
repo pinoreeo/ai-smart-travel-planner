@@ -75,45 +75,6 @@ Response:
 
 Endpoint ini dipakai untuk memastikan token admin dan middleware admin sudah jalan.
 
-### Uploads
-
-```http
-POST /admin/uploads/images
-```
-
-Dipakai dashboard admin untuk upload gambar ke Supabase Storage.
-
-Request pakai `multipart/form-data`:
-
-```text
-image      file jpg/jpeg/png/webp, maksimal 5 MB
-directory  optional, default places
-```
-
-Contoh response:
-
-```json
-{
-  "success": true,
-  "message": "Image uploaded successfully.",
-  "data": {
-    "provider": "supabase",
-    "bucket": "place-images",
-    "path": "places/2026/08/uuid.jpg",
-    "public_id": "places/2026/08/uuid.jpg",
-    "image_url": "https://project.supabase.co/storage/v1/object/public/place-images/places/2026/08/uuid.jpg",
-    "mime_type": "image/jpeg",
-    "size": 123456
-  }
-}
-```
-
-Pakai `image_url` dan `public_id` dari response ini saat tambah gambar destinasi di:
-
-```http
-POST /admin/places/{place}/images
-```
-
 ### Categories
 
 ```http
@@ -377,7 +338,7 @@ Dipakai untuk:
 - set primary image
 - hapus gambar
 
-Catatan: upload file gambar pakai endpoint `POST /admin/uploads/images`. Endpoint place images ini hanya menyimpan URL, caption, alt text, dan status primary image.
+Catatan: provider upload gambar belum ditentukan. Bisa pakai local storage dulu, lalu nanti pindah ke Cloudinary/S3 kalau perlu.
 
 Contoh tambah gambar:
 
@@ -672,6 +633,7 @@ page=1
 
 API internal untuk client dan dashboard admin sudah ada fondasinya. Yang belum termasuk di sini adalah integrasi pihak kedua:
 
+- upload gambar beneran ke Cloudinary/S3/local storage endpoint
 - AI provider beneran untuk generate itinerary
 - maps/routing provider beneran untuk jarak, durasi, dan geometry route
 - enrichment data wisata dari Google Places/Wikidata kalau nanti mau data lebih lengkap
@@ -681,8 +643,9 @@ API internal untuk client dan dashboard admin sudah ada fondasinya. Yang belum t
 Saran lanjutannya:
 
 1. Pakai Place Imports untuk seed awal data wisata Jawa Tengah.
-2. Tentukan AI provider.
-3. Tentukan maps/routing provider.
-4. Baru mulai dashboard admin dan integrasi frontend/mobile dengan API yang sudah ada.
+2. Tentukan provider upload gambar.
+3. Tentukan AI provider.
+4. Tentukan maps/routing provider.
+5. Baru mulai dashboard admin dan integrasi frontend/mobile dengan API yang sudah ada.
 
 Dashboard admin sekarang sudah bisa mulai dibangun untuk input data destinasi, import destinasi semi-otomatis, kategori, fasilitas, user role, dan monitoring trip.
