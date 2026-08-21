@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Admin\FacilityController as AdminFacilityControl
 use App\Http\Controllers\Api\V1\Admin\ItineraryController as AdminItineraryController;
 use App\Http\Controllers\Api\V1\Admin\PlaceController as AdminPlaceController;
 use App\Http\Controllers\Api\V1\Admin\PlaceImageController as AdminPlaceImageController;
+use App\Http\Controllers\Api\V1\Admin\PlaceImportController as AdminPlaceImportController;
 use App\Http\Controllers\Api\V1\Admin\PlaceOpeningHourController as AdminPlaceOpeningHourController;
 use App\Http\Controllers\Api\V1\Admin\RoleController as AdminRoleController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
@@ -95,6 +96,18 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::put('users/{user}/roles', [AdminUserController::class, 'syncRoles'])
                 ->name('users.roles.sync');
             Route::apiResource('users', AdminUserController::class)->only(['index', 'show', 'update']);
+
+            Route::get('place-imports/osm/preview', [AdminPlaceImportController::class, 'previewOsm'])
+                ->name('place-imports.osm.preview');
+            Route::post('place-imports/preview', [AdminPlaceImportController::class, 'preview'])
+                ->name('place-imports.preview');
+            Route::post('place-imports/{placeImport}/approve', [AdminPlaceImportController::class, 'approve'])
+                ->name('place-imports.approve');
+            Route::post('place-imports/{placeImport}/reject', [AdminPlaceImportController::class, 'reject'])
+                ->name('place-imports.reject');
+            Route::apiResource('place-imports', AdminPlaceImportController::class)
+                ->except(['create', 'edit'])
+                ->parameters(['place-imports' => 'placeImport']);
 
             Route::put('places/{place}/categories', [AdminPlaceController::class, 'syncCategories'])
                 ->name('places.categories.sync');

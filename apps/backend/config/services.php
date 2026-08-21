@@ -22,6 +22,10 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'overpass' => [
+        'endpoint' => env('OVERPASS_API_ENDPOINT', 'https://overpass-api.de/api/interpreter'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

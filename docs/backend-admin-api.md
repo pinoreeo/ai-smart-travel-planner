@@ -355,6 +355,149 @@ Contoh tambah gambar:
 
 Kalau `is_primary=true`, gambar primary yang lama otomatis diganti.
 
+### Place Imports
+
+```http
+GET    /admin/place-imports
+POST   /admin/place-imports/preview
+GET    /admin/place-imports/osm/preview
+POST   /admin/place-imports
+GET    /admin/place-imports/{placeImport}
+PATCH  /admin/place-imports/{placeImport}
+DELETE /admin/place-imports/{placeImport}
+POST   /admin/place-imports/{placeImport}/approve
+POST   /admin/place-imports/{placeImport}/reject
+```
+
+Ini buat alur semi-otomatis data wisata.
+
+Flow enaknya:
+
+```text
+ambil calon data dari luar
+→ preview
+→ simpan sebagai pending import
+→ admin cek/edit
+→ approve jadi destinasi draft/published
+→ atau reject kalau datanya jelek/duplikat
+```
+
+Preview dari OSM/Overpass:
+
+```http
+GET /admin/place-imports/osm/preview?province=Jawa Tengah&limit=50
+```
+
+Catatan:
+
+- endpoint ini butuh internet karena narik data dari Overpass API
+- tidak butuh API key
+- hasilnya belum masuk database, cuma preview
+- data OSM biasanya belum punya harga tiket, jadi admin tetap perlu cek
+
+Preview manual/bulk dari data yang sudah kamu punya:
+
+```http
+POST /admin/place-imports/preview
+```
+
+Contoh body:
+
+```json
+{
+  "source": "manual",
+  "items": [
+    {
+      "name": "Curug Contoh",
+      "address": "Desa Contoh, Kabupaten Semarang",
+      "city": "Kabupaten Semarang",
+      "province": "Jawa Tengah",
+      "latitude": -7.1234567,
+      "longitude": 110.1234567,
+      "category_slugs": ["alam", "petualangan"]
+    }
+  ]
+}
+```
+
+Simpan hasil preview jadi pending import:
+
+```http
+POST /admin/place-imports
+```
+
+Body-nya sama seperti preview manual. Kalau import punya `source` dan `source_id` yang sama, data lama akan di-update selama belum approved.
+
+Query list yang bisa dipakai:
+
+```text
+q=curug
+source=osm
+status=pending
+province=Jawa Tengah
+city=Magelang
+per_page=15
+page=1
+```
+
+Status import:
+
+```text
+pending    siap direview admin
+duplicate  kemungkinan sudah ada di trp_places
+approved   sudah dibuat jadi destinasi
+rejected   ditolak admin
+```
+
+Edit hasil import sebelum approve:
+
+```http
+PATCH /admin/place-imports/{placeImport}
+```
+
+Contoh:
+
+```json
+{
+  "address": "Alamat yang sudah dicek admin",
+  "city": "Kabupaten Semarang",
+  "ticket_price": 10000,
+  "recommended_duration_minutes": 90,
+  "category_slugs": ["alam", "petualangan"]
+}
+```
+
+Approve jadi destinasi:
+
+```http
+POST /admin/place-imports/{placeImport}/approve
+```
+
+Default-nya jadi destinasi `draft`.
+
+Kalau mau langsung publish:
+
+```json
+{
+  "publish": true,
+  "review_notes": "Data sudah dicek admin"
+}
+```
+
+Reject:
+
+```http
+POST /admin/place-imports/{placeImport}/reject
+```
+
+Contoh:
+
+```json
+{
+  "review_notes": "Duplikat dan datanya kurang jelas"
+}
+```
+
 ### Roles
 
 ```http
@@ -493,14 +636,16 @@ API internal untuk client dan dashboard admin sudah ada fondasinya. Yang belum t
 - upload gambar beneran ke Cloudinary/S3/local storage endpoint
 - AI provider beneran untuk generate itinerary
 - maps/routing provider beneran untuk jarak, durasi, dan geometry route
+- enrichment data wisata dari Google Places/Wikidata kalau nanti mau data lebih lengkap
 
 ## Urutan Implementasi Yang Enak
 
 Saran lanjutannya:
 
-1. Tentukan provider upload gambar.
-2. Tentukan AI provider.
-3. Tentukan maps/routing provider.
-4. Baru mulai dashboard admin dan integrasi frontend/mobile dengan API yang sudah ada.
+1. Pakai Place Imports untuk seed awal data wisata Jawa Tengah.
+2. Tentukan provider upload gambar.
+3. Tentukan AI provider.
+4. Tentukan maps/routing provider.
+5. Baru mulai dashboard admin dan integrasi frontend/mobile dengan API yang sudah ada.
 
-Dashboard admin sekarang sudah bisa mulai dibangun untuk input data destinasi, kategori, fasilitas, user role, dan monitoring trip.
+Dashboard admin sekarang sudah bisa mulai dibangun untuk input data destinasi, import destinasi semi-otomatis, kategori, fasilitas, user role, dan monitoring trip.
