@@ -26,12 +26,6 @@ return [
         'endpoint' => env('OVERPASS_API_ENDPOINT', 'https://overpass-api.de/api/interpreter'),
     ],
 
-    'supabase' => [
-        'url' => env('SUPABASE_URL'),
-        'service_role_key' => env('SUPABASE_SERVICE_ROLE_KEY'),
-        'storage_bucket' => env('SUPABASE_STORAGE_BUCKET', 'place-images'),
-    ],
-
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
