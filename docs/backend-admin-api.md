@@ -75,6 +75,72 @@ Response:
 
 Endpoint ini dipakai untuk memastikan token admin dan middleware admin sudah jalan.
 
+### Routing Preview
+
+```http
+POST /admin/routing/preview
+```
+
+Dipakai untuk cek routing dari backend. Ini berguna buat test API key OpenRouteService tanpa perlu generate itinerary dulu.
+
+Contoh body:
+
+```json
+{
+  "from_latitude": -7.6079,
+  "from_longitude": 110.2038,
+  "to_latitude": -7.752,
+  "to_longitude": 110.4915,
+  "transport_mode": "car"
+}
+```
+
+Contoh response:
+
+```json
+{
+  "success": true,
+  "message": "Route preview generated successfully.",
+  "data": {
+    "distance_km": 42.3,
+    "duration_minutes": 65,
+    "route_geometry": {
+      "type": "LineString",
+      "coordinates": []
+    },
+    "provider": "openrouteservice",
+    "is_fallback": false
+  }
+}
+```
+
+Kalau `OPENROUTESERVICE_API_KEY` belum diisi atau API provider gagal, backend tetap balikin route fallback:
+
+```json
+{
+  "provider": "fallback",
+  "is_fallback": true
+}
+```
+
+Cara ambil API key OpenRouteService:
+
+```text
+1. Buka https://openrouteservice.org
+2. Sign up / login
+3. Masuk ke dashboard/developer dashboard
+4. Cari tab API Key
+5. Copy Basic Key / API key
+6. Simpan di backend .env
+```
+
+Env backend:
+
+```env
+OPENROUTESERVICE_API_KEY=isi_api_key_dari_openrouteservice
+OPENROUTESERVICE_BASE_URL=https://api.openrouteservice.org
+```
+
 ### Categories
 
 ```http
@@ -635,7 +701,6 @@ API internal untuk client dan dashboard admin sudah ada fondasinya. Yang belum t
 
 - upload gambar beneran ke Cloudinary/S3/local storage endpoint
 - AI provider beneran untuk generate itinerary
-- maps/routing provider beneran untuk jarak, durasi, dan geometry route
 - enrichment data wisata dari Google Places/Wikidata kalau nanti mau data lebih lengkap
 
 ## Urutan Implementasi Yang Enak
@@ -644,8 +709,8 @@ Saran lanjutannya:
 
 1. Pakai Place Imports untuk seed awal data wisata Jawa Tengah.
 2. Tentukan provider upload gambar.
-3. Tentukan AI provider.
-4. Tentukan maps/routing provider.
+3. Isi API key OpenRouteService untuk routing beneran.
+4. Tentukan AI provider.
 5. Baru mulai dashboard admin dan integrasi frontend/mobile dengan API yang sudah ada.
 
 Dashboard admin sekarang sudah bisa mulai dibangun untuk input data destinasi, import destinasi semi-otomatis, kategori, fasilitas, user role, dan monitoring trip.

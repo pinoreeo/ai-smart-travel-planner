@@ -8,6 +8,7 @@ use App\Http\Resources\Api\V1\ItineraryResource;
 use App\Models\Category;
 use App\Models\Itinerary;
 use App\Models\Place;
+use App\Services\Routing\RoutingService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,10 @@ use Illuminate\Validation\Rule;
 class PlannerController extends Controller
 {
     use RespondsWithApiResponse;
+
+    public function __construct(
+        private readonly RoutingService $routing
+    ) {}
 
     public function storeDraft(Request $request): JsonResponse
     {
@@ -195,8 +200,15 @@ class PlannerController extends Controller
         $sequence = 1;
 
         foreach ($places as $place) {
-            $distance = $this->distanceKm($currentLat, $currentLng, (float) $place->latitude, (float) $place->longitude);
-            $travelDuration = $this->travelDurationMinutes($distance, $itinerary->transport_mode);
+            $route = $this->routing->route(
+                $currentLat,
+                $currentLng,
+                (float) $place->latitude,
+                (float) $place->longitude,
+                $itinerary->transport_mode
+            );
+            $distance = $route->distanceKm;
+            $travelDuration = $route->durationMinutes;
             $visitDuration = $this->visitDurationMinutes((int) $place->recommended_duration_minutes, $itinerary->travel_style);
             $arrival = $cursor->copy()->addMinutes($travelDuration);
             $departure = $arrival->copy()->addMinutes($visitDuration);
@@ -231,13 +243,7 @@ class PlannerController extends Controller
                 'transport_cost' => $transportCost,
                 'food_cost' => $foodCost,
                 'subtotal_cost' => $subtotal,
-                'route_geometry' => [
-                    'type' => 'LineString',
-                    'coordinates' => [
-                        [$currentLng, $currentLat],
-                        [(float) $place->longitude, (float) $place->latitude],
-                    ],
-                ],
+                'route_geometry' => $route->geometry,
             ]);
 
             $totals['ticket'] += $ticketCost;
@@ -310,19 +316,6 @@ class PlannerController extends Controller
         };
     }
 
-    private function travelDurationMinutes(float $distanceKm, string $transportMode): int
-    {
-        $speedKmh = match ($transportMode) {
-            'walking' => 5,
-            'cycling' => 15,
-            'motorcycle' => 30,
-            'car' => 35,
-            default => 25,
-        };
-
-        return max(5, (int) ceil(($distanceKm / $speedKmh) * 60));
-    }
-
     private function transportCost(float $distanceKm, string $transportMode): float
     {
         $costPerKm = match ($transportMode) {
@@ -341,16 +334,5 @@ class PlannerController extends Controller
             'car' => (float) $place->parking_price_car,
             default => 0,
         };
-    }
-
-    private function distanceKm(float $fromLat, float $fromLng, float $toLat, float $toLng): float
-    {
-        $earthRadiusKm = 6371;
-        $latDelta = deg2rad($toLat - $fromLat);
-        $lngDelta = deg2rad($toLng - $fromLng);
-        $a = sin($latDelta / 2) ** 2
-            + cos(deg2rad($fromLat)) * cos(deg2rad($toLat)) * sin($lngDelta / 2) ** 2;
-
-        return $earthRadiusKm * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 }
